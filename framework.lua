@@ -48,15 +48,11 @@ end
 DONE
 ]]
 
+local showWarnings = true
+
 local modules = {}	
 local loadOrder = {}
 local moduleInitFunction = {}
-local moduleDirs = {}
-
---support for other module direcotories
-function fw_addModuleDirectory(dir,path)
-	moduleDirs[dir] = path	
-end
 
 function fw_addModule(name,script)
 	modules[name] = script
@@ -66,13 +62,9 @@ function fw_addModuleInitCallback(modulename,callback)
 	moduleInitFunction[modulename] = callback
 end
 
-function fw_loadModule(name,dir)
+function fw_loadModule(name)
 	if modules[name] then return end
-	if dir then
-		import(moduleDirs[dir]..name..'.lua')
-	else
-		import('mod_assets/framework/modules/'..name..'.lua')
-	end
+	import('mod_assets/framework/modules/'..name..'.lua')
 end
 
 function tableToSet(list)
@@ -80,8 +72,8 @@ function tableToSet(list)
   for _, l in ipairs(list) do set[l] = true end
   return set
 end
-fw_loadModule('grimq')
 fw_loadModule('timers')
+fw_loadModule('grimq')
 fw_loadModule('fw')
 fw_loadModule('data')
 fw_loadModule('help')
@@ -101,7 +93,9 @@ cloneObject{
 				script = findEntity(moduleName)
 				script:setSource(source)
 			else
-				print('script entity "'..moduleName..'" found from dungeon, the module from lua file was not loaded')
+				if showWarnings then
+					print('script entity "'..moduleName..'" found from dungeon, the module from lua file was not loaded')
+				end
 			end
 		end
 		spawn('timer',party.level,0,0,0,'logfw_inittimer')
@@ -113,7 +107,7 @@ cloneObject{
 		for _,moduleName in ipairs(loadOrder) do
 			local moduleEntity = findEntity(moduleName)	
 			if moduleInitFunction[moduleName] then
-				moduleInitFunction[moduleName](moduleEntity)
+				moduleInitFunction[moduleName](moduleEntity,grimq)
 			end
 			
 			if moduleEntity and moduleEntity.activate then

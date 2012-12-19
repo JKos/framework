@@ -8,7 +8,6 @@ See defineSpells-function for included spells
 ]]
 fw_loadModule('fw_magic')
 fw_addModule('add_spells',[[
-
 settings = {}
 
 function activate()
@@ -578,6 +577,9 @@ function initChampion(champ)
 end
 
 function updateSpellPoints(champ)
+	if champ:getLevel() > 14 then
+		return
+	end
 	local progressionTable = {
 	{1},
 	{1},
@@ -595,6 +597,7 @@ function updateSpellPoints(champ)
 	{0, 0, 0, 1, 1},
 }
 	local spellPoints = data.get(champ,'spellPoints')
+	
 	for spellLevel,points in ipairs(progressionTable[champ:getLevel()]) do
 		spellPoints[spellLevel] = points + (spellPoints[spellLevel] or 0)
 	end
