@@ -17,6 +17,10 @@ function setTestMode(enabled)
 	testMode = enabled
 end
 
+function getSpells()
+	return spells
+end
+
 function activate()
 	-- scroll hook --
 	
@@ -30,6 +34,9 @@ function activate()
 			return true
 		end
 	})	
+	
+
+	
 end
 
 function enableSpellBook()
@@ -55,7 +62,7 @@ function onLearnSpell(scroll,champion)
 	local spellDef = fw_magic.spells[spellName]
 	if spellDef.skill then
 		if champion:getSkillLevel(spellDef.skill) < spellDef.level then
-			hudPrint("Not skillfull enough to learn this spell")
+			hudPrint("Not skilled enough to learn this spell")
 			return false
 		end
 	elseif champion:getLevel() < spellDef.level then
@@ -401,7 +408,7 @@ function preventPickingUpSpellBook()
 	end
 	local sbtimer = timers:create('spell_book_timer') 
 
-	sbtimer:setTimerInterval(0.3)
+	sbtimer:setTimerInterval(0.2)
 	sbtimer:addConnector('activate','fw_magic','spellBookScanner')
 	sbtimer:setConstant()
 	sbtimer:activate()
@@ -471,7 +478,7 @@ function addSpellsToMonsters(monsterNamespace,spellName,amount,targets,range,pro
 end
 ]])
 
-defineObject{
+fw_defineObject{
 	name = "spell_projectile",
 	class = "Item",
 	uiName = "Spell projectile",
@@ -532,7 +539,7 @@ function createSpell(spellDef,createScroll)
 		return
 	end
 	
-	defineObject{
+	fw_defineObject{
 	   name = 'spell_book_'..spellDef.name,
 	   uiName = spellDef.uiName,
 		class = "Item",
@@ -564,7 +571,7 @@ function createSpell(spellDef,createScroll)
 	}
 	
 	-- automatically create a scroll for every spell
-	defineObject{
+	fw_defineObject{
 		name = "scroll_"..spellDef.name,
 		class = "Item",
 		uiName = "Scroll of "..spellDef.uiName,
@@ -579,7 +586,7 @@ function createSpell(spellDef,createScroll)
 end
 
 function createSpellBook()
-	defineObject{
+	fw_defineObject{
 		name = "spell_book_mage",
 		class = "Item",
 		uiName = "Spell book",
@@ -593,7 +600,7 @@ function createSpellBook()
 	}
 	local magics = {'Fire','Air','Ice','Earth','Spellcraft'}
 	for i=1,#magics do
-		defineObject{
+		fw_defineObject{
 			name = "spell_book_level_"..i,
 			class = "Item",
 			uiName = magics[i],

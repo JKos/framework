@@ -83,7 +83,7 @@ function nextEntityAheadOf(fromEntity, distance,entityType,stopToBarrier)
 				return ent
 			end			
 		end
-		if stopToBarrier and help.isWall(coords.x,  coords.y) then return false end	
+		if stopToBarrier and isWall(coords.level,coords.x,  coords.y) then return false end	
 	end
 	return false
 end
@@ -217,20 +217,7 @@ function iEntitiesByName (names,level)
 	end
 	return iter
 end
--- checks if tile x,y is a wall
--- thanks to Edsploration
 
-function isWall(x,y)
-   spawn("spawner", party.level, x, y, 0, "probe_spawner"):setSpawnedEntity("probe"):activate()
-   probe_spawner:destroy()
-   for e in entitiesAt(party.level, x, y) do
-      if e.name == "probe" then
-         e:destroy()
-		 return false
-      end
-	end	
-	return e == nil
-end
 
 
 --slots: 

@@ -54,6 +54,11 @@ local modules = {}
 local loadOrder = {}
 local moduleInitFunction = {}
 
+--  Set to false if you dont wan't to see warnings about module scripts copy pasted to dungeon
+function fw_setShowWarnings(show)
+	showWarnings = show
+end
+
 function fw_addModule(name,script)
 	modules[name] = script
 	loadOrder[#loadOrder+1] = name 

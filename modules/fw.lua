@@ -433,11 +433,39 @@ lists.alcove = {"dungeon_alcove","temple_alcove","prison_alcove", "eye_socket_le
 lists.blockage = {"barrel_crate_block","spider_eggs","metal_junk_block","dragon_statue","goromorg_fourway","goromorg_fourway_dark","dungeon_cave_in","temple_cave_in","prison_cave_in"}
 lists.spell = {"fireburst","shockburst","frostburst","fireball","fireball_greater","poison_bolt","poison_bolt_greater","frostbolt","improved_frostbolt","ice_shards","lightning_bolt","lightning_bolt_greater","powerbolt","poison_cloud","blob"}
 
-function fw_addHooks(entityName,entityType,itemSubtype)
-	if entityType == 'monster' then
-		cloneObject{
-			name = entityName,
-			baseObject = entityName,
+
+function fw_getHooks(entityClass,itemSubtype)
+	entityClass = string.lower(entityClass)
+	if entityClass == 'item' then
+		itemSubtype = itemSubtype or 'custom'
+		return {
+			onUseItem = function(self,p1,p2,p3)
+				local retVal = fw.executeHooks('items_'..itemSubtype,'onUseItem',self,p1,p2,p3)
+				if retVal == false then return false end
+				retVal = fw.executeEntityHooks("items","onUseItem",self,p1,p2,p3)
+				if retVal == false then return false end
+				if retVal == nil and fw.lists.item.consumable[self.name] then
+					return true
+				end
+				return retVal
+			end,
+			onEquipItem = function(champion, slot)
+				-- check that the fw script is loaded (in editor this is called before the fw is loaded because the everburning torch is spawned to the inventory instantly)
+				if not fw or fw.executeEntityHooks == nil then return end 
+				local item = champion:getItem(slot)
+				local retVal = fw.executeEntityHooks("items","onEquipItem",item,champion,slot)
+				return retVal
+			end,
+			onUnequipItem = function(champion, slot)
+				if not fw or fw.executeEntityHooks == nil then return end 
+				local item = champion:getItem(slot)
+				local retVal = fw.executeEntityHooks("items","onUnequipItem",item,champion,slot)
+				return retVal
+			end,	
+		}
+	end
+	if entityClass == 'monster' then
+		return {
 			onMove = function(self,p1,p2,p3) return fw.executeEntityHooks("monsters","onMove",self,p1,p2,p3) end,
 			onTurn = function(self,p1,p2,p3) return fw.executeEntityHooks("monsters","onTurn",self,p1,p2,p3) end,
 			onAttack = function(self,p1,p2,p3) return fw.executeEntityHooks("monsters","onAttack",self,p1,p2,p3) end,
@@ -450,19 +478,15 @@ function fw_addHooks(entityName,entityType,itemSubtype)
 				return fw.executeEntityHooks("monsters","onProjectileHit",monster,projectile,damage,damageType) 
 			end
 		}
-	end
-	if entityType == 'door' then	
-		cloneObject{
-			name = entityName,
-			baseObject = entityName,
+	end	
+	if entityClass == 'door' then
+		return {
 			onClose = function(self,p1,p2,p3) return fw.executeEntityHooks("doors","onClose",self,p1,p2,p3) end,
 			onOpen = function(self,p1,p2,p3) return fw.executeEntityHooks("doors","onOpen",self,p1,p2,p3) end,		
 		}	
 	end
-	if entityType == 'blockage' then	
-		cloneObject{
-			name = entityName,
-			baseObject = entityName,
+	if entityClass == 'blockage' then	
+		return {
 			onDamage = function(self,p1,p2,p3) return fw.executeEntityHooks("blockages","onDamage",self,p1,p2,p3) end,	
 			onProjectileHit = function(blockage,projectile,damage,damageType) 
 				if fw.executeEntityHooks("projectiles","onHit",blockage,champion,damage,damageType) == false then return false end
@@ -470,46 +494,47 @@ function fw_addHooks(entityName,entityType,itemSubtype)
 			end,
 			onDie = function(self,p1,p2,p3) return fw.executeEntityHooks("blockages","onDie",self,p1,p2,p3) end,	
 		}	
-	end	
-	if entityType == 'alcove' then	
-		cloneObject{
-			name = entityName,
-			baseObject = entityName,
+	end		
+	if entityClass == 'alcove' then	
+		return {
 			onInsertItem = function(self,p1,p2,p3) 
 				if fw.executeEntityHooks("alcoves","onInsertItem",self,p1,p2,p3) == false then return false  end
 				return true
 			end,		
 		}	
-	end	
-	if entityType == 'item' then	
-		-- add item to the items list
-		if (itemSubtype) then
-			lists.item[itemSubtype][#lists.item[itemSubtype]] = entityName
-		end
-		cloneObject{
-			name = entityName,
-			baseObject = entityName,
-			-- call item category hooks first eg. 'item_consumable'
-			-- then other hooks
-			-- if hook returns false other hooks are skipped and item is not consumed even if it's consumable
-			-- if hook returns true, item is consumed even it is not consumable
-			-- consumable items are consumed by default (if return value is nil or true or there is no custom hooks)
-			onUseItem = function(self,p1,p2,p3)
-				local retVal = fw.executeHooks('items_'..category,'onUseItem',self,p1,p2,p3)
-				
-				if retVal == false then return false end
-				
-				retVal = fw.executeEntityHooks("items","onUseItem",self,p1,p2,p3)
-				if retVal == false then return false end
-				
-				if retVal == nil and fw.lists.item.consumable[self.name] then
-					return true
-				end
-				return retVal
+	end			
+	return {}
+end
 
-			end,
-		}
-	end	
+
+function fw_defineObject(def)
+	local itemSubtype = def.itemCategory or 'custom'
+	def.itemCategory = nil
+	local hooks = fw_getHooks(def.class,itemSubtype)
+	for hookName,hookFunc in pairs(hooks) do
+	
+		if def[hookName] == nil then
+			def[hookName] = hookFunc
+		end
+	end
+	-- Container:onUseItem not supported
+	if def.container then
+		def.onUseItem = nil	
+	end
+	
+	if entityType == 'item' then	
+		-- add item to the items list by subtype
+		lists.item[itemSubtype][#lists.item[itemSubtype]] = entityName
+		
+	end		
+	defineObject(def)
+end
+
+function fw_addHooks(entityName,entityType,itemSubtype)
+	local def = fw_getHooks(entityType,itemSubtype)
+	def.name = entityName
+	def.baseObject = entityName
+	cloneObject(def)	
 end
 
 
@@ -531,10 +556,10 @@ end
 
 
 for category,list in pairs(lists.item) do
-    -- containers and food disabled for now because of their behaviour seems to be hard coded 
+    -- containers and food disabled for now because their behaviour seems to be hard coded 
 	if (category ~= 'container' and category ~= 'food' and category ~= 'consumable') then
 		for i=1,# list do 
-			fw_addHooks(list[i],'item')
+			fw_addHooks(list[i],'item',category)
 		end
 	end
 end
@@ -547,6 +572,7 @@ for i=1,# lists.blockage do
 	fw_addHooks(lists.blockage[i],'blockage')
 end
 
+-- Party hooks
 cloneObject{
 	name = "party",
 	baseObject = "party",
