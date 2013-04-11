@@ -16,7 +16,7 @@ Author: JKos
 
 CHANGES 2013-04-11
 
-´´´lua
+```lua
 function autoexec()
 
   --just a simple callback for demo purposes
@@ -69,4 +69,4 @@ function autoexec()
 
 
 end
-´´´
+```
