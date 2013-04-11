@@ -79,9 +79,11 @@ function tableToSet(list)
 end
 fw_loadModule('timers')
 fw_loadModule('grimq')
-fw_loadModule('fw')
 fw_loadModule('data')
 fw_loadModule('help')
+fw_loadModule('fw')
+fw_loadModule('fw_default_hooks')
+
 
 
 
@@ -103,10 +105,14 @@ cloneObject{
 				end
 			end
 		end
-		spawn('timer',party.level,0,0,0,'logfw_inittimer')
-		logfw_inittimer:addConnector('activate','logfw_init','main')
-		logfw_inittimer:setTimerInterval(0.1)
-		logfw_inittimer:activate()
+		spawn("pressure_plate_hidden", party.level, party.x, party.y, 0,'logfw_init_plate')
+		:setTriggeredByParty(true)
+		:setTriggeredByMonster(false)
+		:setTriggeredByItem(false)
+		:setActivateOnce(true)
+		:setSilent(true)
+		:addConnector('activate','logfw_init','main')		
+		
 	end,
 	onClose = function()
 		for _,moduleName in ipairs(loadOrder) do
@@ -114,13 +120,13 @@ cloneObject{
 			if moduleInitFunction[moduleName] then
 				moduleInitFunction[moduleName](moduleEntity,grimq)
 			end
-			
+			if moduleEntity and moduleEntity.init_module then
+				moduleEntity.init_module()
+			end			
 			if moduleEntity and moduleEntity.activate then
 				moduleEntity.activate()
 			end
 		end		
-		logfw_inittimer:deactivate()
-		logfw_inittimer:destroy()
 		fwInit:destroy()	
 	end
 }

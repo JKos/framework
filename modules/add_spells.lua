@@ -275,7 +275,7 @@ melfs_acid_arrow_onHit = function(projectile,target,damage,damageType)
 					fx:translate(0,1,0)		
 			end
 			local attacks = math.ceil(caster:getLevel()/3)	
-			fw.repeatFunction(attacks,1,{fw.getId(caster),fw.getId(target)},callback,true)			
+			timers.repeatCall(1,attacks,true,callback,{fw.getId(caster),fw.getId(target)})			
 			return false
 end
 
