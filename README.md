@@ -14,10 +14,11 @@ https://sites.google.com/site/jkosgrimrock2/
 
 Author: JKos
 
-CHANGES 2013-04-11
+##CHANGES 2013-04-11
 
 - GrimQ updated to newest version
 - Added new features to timers-script entity
+- init_module method is now called automatically when the module script entity is loaded 
 - Bug fix: eg. fw.getById('champion_1') returned champion by slot instead of ordinal.
 
 Examples of new features (this is runnable code)
