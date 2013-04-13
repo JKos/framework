@@ -53,6 +53,7 @@ local showWarnings = true
 local modules = {}	
 local loadOrder = {}
 local moduleInitFunction = {}
+local modulePreInitFunction = {}
 
 --  Set to false if you dont wan't to see warnings about module scripts copy pasted to dungeon
 function fw_setShowWarnings(show)
@@ -63,6 +64,11 @@ function fw_addModule(name,script)
 	modules[name] = script
 	loadOrder[#loadOrder+1] = name 
 end
+
+function fw_addModulePreInitCallback(modulename,callback)
+	modulePreInitFunction[modulename] = callback
+end
+
 function fw_addModuleInitCallback(modulename,callback)
 	moduleInitFunction[modulename] = callback
 end
@@ -104,6 +110,10 @@ cloneObject{
 					print('script entity "'..moduleName..'" found from dungeon, the module from lua file was not loaded')
 				end
 			end
+			if modulePreInitFunction[moduleName] then
+				modulePreInitFunction[moduleName](spawn)
+			end		
+			
 		end
 		spawn("pressure_plate_hidden", party.level, party.x, party.y, 0,'logfw_init_plate')
 		:setTriggeredByParty(true)
